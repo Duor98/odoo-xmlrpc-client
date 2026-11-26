@@ -1,54 +1,68 @@
 # Odoo XML-RPC Client
 
-A Python client for scripts that read or update records on Odoo instances with the legacy XML-RPC API enabled. It uses Python’s standard library and requires Python 3.9 or later.
+Read and update Odoo records from Python scripts. The client handles authentication, wraps common model methods, and has no runtime dependencies. Requires Python 3.9 or later.
 
-## Install
+![Connection flow from a Python script through the client to Odoo's authentication and model endpoints](docs/images/connection-flow.png)
 
-From a clone of this repository:
+## Quick start
+
+Clone the repository, then install it from its root directory.
 
 ```sh
 python -m pip install .
 ```
 
-## Connect
-
-Set these variables in the environment of your script.
+Set these variables in your script's environment.
 
 | Variable | Value |
 | --- | --- |
 | `ODOO_URL` | Instance base URL, such as `https://odoo.example.com` |
 | `ODOO_DB` | Database name |
 | `ODOO_USERNAME` | Odoo login |
-| `ODOO_API_KEY` | API key, preferred. Set `ODOO_PASSWORD` instead if the instance uses password authentication. |
+| `ODOO_API_KEY` | API key. Set `ODOO_PASSWORD` instead if your instance uses password authentication. |
 
-Use HTTPS for remote instances. HTTPS connections verify certificates by default. The timeout is 30 seconds and can be set with `Odoo.from_env(timeout=10)`.
+Run the [read-only example](examples/list_companies.py) from the repository root.
+
+```sh
+python examples/list_companies.py
+```
 
 ```python
 from odoo_xmlrpc_client import Odoo
 
 with Odoo.from_env() as odoo:
-    partners = odoo.search_read(
+    companies = odoo.search_read(
         "res.partner",
         [("is_company", "=", True)],
         fields=["name"],
         limit=5,
     )
-    for partner in partners:
-        print(partner["name"])
+    for company in companies:
+        print(company["name"])
 ```
 
-`version()` checks the connection before authentication. The first model call authenticates automatically. For methods without a dedicated wrapper, call `execute_kw(model, method, args, kwargs)`. Use a separate client instance per thread.
+![Example search_read call for up to five companies and an illustrative result with a record ID and company name](docs/images/search-read-example.png)
+
+## Client methods
+
+| Task | Methods |
+| --- | --- |
+| Check server availability and sign in | `version()`, `authenticate()` |
+| Find or read records | `search()`, `search_read()`, `search_count()`, `read()`, `name_search()` |
+| Change records | `create()`, `write()`, `unlink()` |
+| Inspect fields or call another model method | `fields_get()`, `execute_kw()` |
+
+`version()` works before authentication. The first model call authenticates automatically. Use HTTPS for remote instances. HTTPS verifies certificates by default. The request timeout defaults to 30 seconds and can be set with `Odoo.from_env(timeout=10)`. Use a separate client instance per thread.
 
 Model operations use the configured Odoo user's permissions. The client sends each request once. If the connection drops during a write, check the server state before retrying it.
 
-## Odoo compatibility
+## Compatibility
 
-The server must expose `/xmlrpc/2/common` and `/xmlrpc/2/object`. On hosted Odoo plans, check whether your plan includes external API access. Odoo has deprecated XML-RPC and recommends JSON-2 for new integrations on servers that support it. [Odoo's external RPC documentation](https://www.odoo.com/documentation/19.0/developer/reference/external_rpc_api.html)
+The server must expose `/xmlrpc/2/common` and `/xmlrpc/2/object`. For hosted Odoo, check that your plan includes external API access. Odoo has deprecated XML-RPC and recommends JSON-2 for new integrations on servers that support it. [Odoo external RPC documentation](https://www.odoo.com/documentation/19.0/developer/reference/external_rpc_api.html)
 
-## Tests
+## Repository
 
-```sh
-python -m unittest discover -s tests -v
-```
-
-The tests use a local XML-RPC server and fictitious credentials.
+- [Package source](src/odoo_xmlrpc_client/) contains the client.
+- [Examples](examples/) contain runnable usage examples.
+- [Tests](tests/) use a local XML-RPC server and fictitious credentials.
+- [Contributing](CONTRIBUTING.md) covers local setup and tests.
