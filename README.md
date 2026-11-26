@@ -66,3 +66,7 @@ The server must expose `/xmlrpc/2/common` and `/xmlrpc/2/object`. For hosted Odo
 - [Examples](examples/) contain runnable usage examples.
 - [Tests](tests/) use a local XML-RPC server and fictitious credentials.
 - [Contributing](CONTRIBUTING.md) covers local setup and tests.
+
+## License
+
+Released under the [MIT License](LICENSE).
